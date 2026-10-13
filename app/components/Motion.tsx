@@ -48,35 +48,47 @@ function setup() {
   // código está corriendo, y se revela por tres vías independientes: IntersectionObserver, el
   // evento scroll y un control periódico. Si una falla (Safari privado, navegador viejo), las otras
   // lo cubren; si falla todo el setup, .motion nunca se agrega y la página se ve completa.
+  // Los elementos se buscan en vivo (nunca se guardan referencias): si React vuelve a dibujar la
+  // página (p. ej. tras un error de hidratación), los nodos nuevos también se revelan.
   const viewportH = () => window.innerHeight || root.clientHeight || 800;
-  const pending = new Set(document.querySelectorAll<HTMLElement>(".up, .rv, [data-reveal], [data-count]"));
-  debugState().pending = () => pending.size;
+  const pendingEls = () =>
+    document.querySelectorAll<HTMLElement>(":is(.up, .rv, [data-reveal], [data-count]):not(.is-in)");
+  debugState().pending = () => pendingEls().length;
 
   const reveal = (el: HTMLElement) => {
-    if (!pending.delete(el)) return;
+    if (el.classList.contains("is-in")) return;
     el.classList.add("is-in");
     if (el.dataset.count) countUp(el, Number(el.dataset.count), reduced);
     io?.unobserve(el);
   };
 
+  let io: IntersectionObserver | null = null;
+  const observed = new WeakSet<Element>();
+  const observeNew = (els: Iterable<HTMLElement>) => {
+    if (!io) return;
+    for (const el of els) {
+      if (observed.has(el)) continue;
+      observed.add(el);
+      io.observe(el);
+    }
+  };
+
   // Revela todo lo que ya esté a la vista o por encima (borde superior antes del 92 % de la pantalla)
   const sweep = () => {
+    const els = pendingEls();
+    if (!els.length) return;
+    observeNew(els);
     const limit = viewportH() * 0.92;
-    for (const el of pending) {
+    els.forEach((el) => {
       if (el.getBoundingClientRect().top < limit) reveal(el);
-    }
-    if (!pending.size) stopWatch();
+    });
   };
 
   // Lo visible al cargar se muestra sin animar, para que nada parpadee
-  for (const el of pending) {
-    if (el.getBoundingClientRect().top < viewportH()) {
-      pending.delete(el);
-      el.classList.add("is-in");
-    }
-  }
+  pendingEls().forEach((el) => {
+    if (el.getBoundingClientRect().top < viewportH()) el.classList.add("is-in");
+  });
 
-  let io: IntersectionObserver | null = null;
   try {
     io = new IntersectionObserver(
       (entries) => {
@@ -85,13 +97,11 @@ function setup() {
       // Sin umbral de área: los bloques muy altos (texto largo en móvil) también se revelan
       { rootMargin: "0px 0px -8% 0px", threshold: 0 },
     );
-    pending.forEach((el) => io!.observe(el));
+    observeNew(pendingEls());
   } catch {}
 
+  // Control periódico (barato: ~20 elementos); también atrapa nodos que React haya recreado
   const watch = window.setInterval(sweep, 400);
-  function stopWatch() {
-    window.clearInterval(watch);
-  }
 
   // Recién ahora, con los mecanismos de revelado andando, se activa el estado oculto
   root.classList.add("motion");
@@ -225,7 +235,7 @@ function setup() {
   };
 
   const onScroll = () => {
-    if (pending.size) sweep();
+    sweep();
     if (!ticking) {
       ticking = true;
       requestAnimationFrame(update);
@@ -242,7 +252,7 @@ function setup() {
   return () => {
     io?.disconnect();
     spy?.disconnect();
-    stopWatch();
+    window.clearInterval(watch);
     stopAutoScroll();
     document.removeEventListener("click", onClick);
     cancelEvents.forEach((ev) => window.removeEventListener(ev, stopAutoScroll));

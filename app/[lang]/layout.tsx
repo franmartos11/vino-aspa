@@ -31,6 +31,9 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
   return {
     title: meta.title,
     description: meta.description,
+    // Safari en iPhone convierte teléfonos/direcciones en links y modifica el HTML antes de que
+    // React lo hidrate: eso provocaba el error #418 y React redibujaba la página entera.
+    formatDetection: { telephone: false, address: false, email: false, date: false },
     alternates: {
       languages: Object.fromEntries(locales.map((l) => [l, `/${l}`])),
     },
