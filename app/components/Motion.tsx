@@ -13,8 +13,6 @@ import { useEffect } from "react";
  */
 export default function Motion() {
   useEffect(() => {
-    // Avisa al script del <head> que las animaciones arrancaron (si no, muestra todo sin animar)
-    (window as Window & { __aspaMotion?: boolean }).__aspaMotion = true;
     try {
       return setup();
     } catch (err) {
@@ -40,34 +38,74 @@ function setup() {
     }
   } catch {}
 
-  // Aparición al entrar en pantalla
-  const io = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        const el = e.target as HTMLElement;
-        el.classList.add("is-in");
-        if (el.dataset.count) countUp(el, Number(el.dataset.count), reduced);
-        io.unobserve(el);
-      }
-    },
-    { rootMargin: "0px 0px -12% 0px", threshold: 0.12 },
-  );
-  document.querySelectorAll<HTMLElement>(".up, .rv, [data-reveal], [data-count]").forEach((el) => io.observe(el));
+  // ---- Aparición al entrar en pantalla ----
+  // El contenido es visible por defecto. Solo se oculta (clase .motion en <html>) una vez que este
+  // código está corriendo, y se revela por tres vías independientes: IntersectionObserver, el
+  // evento scroll y un control periódico. Si una falla (Safari privado, navegador viejo), las otras
+  // lo cubren; si falla todo el setup, .motion nunca se agrega y la página se ve completa.
+  const viewportH = () => window.innerHeight || root.clientHeight || 800;
+  const pending = new Set(document.querySelectorAll<HTMLElement>(".up, .rv, [data-reveal], [data-count]"));
+
+  const reveal = (el: HTMLElement) => {
+    if (!pending.delete(el)) return;
+    el.classList.add("is-in");
+    if (el.dataset.count) countUp(el, Number(el.dataset.count), reduced);
+    io?.unobserve(el);
+  };
+
+  // Revela todo lo que ya esté a la vista o por encima (borde superior antes del 92 % de la pantalla)
+  const sweep = () => {
+    const limit = viewportH() * 0.92;
+    for (const el of pending) {
+      if (el.getBoundingClientRect().top < limit) reveal(el);
+    }
+    if (!pending.size) stopWatch();
+  };
+
+  // Lo visible al cargar se muestra sin animar, para que nada parpadee
+  for (const el of pending) {
+    if (el.getBoundingClientRect().top < viewportH()) {
+      pending.delete(el);
+      el.classList.add("is-in");
+    }
+  }
+
+  let io: IntersectionObserver | null = null;
+  try {
+    io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) reveal(e.target as HTMLElement);
+      },
+      // Sin umbral de área: los bloques muy altos (texto largo en móvil) también se revelan
+      { rootMargin: "0px 0px -8% 0px", threshold: 0 },
+    );
+    pending.forEach((el) => io!.observe(el));
+  } catch {}
+
+  const watch = window.setInterval(sweep, 400);
+  function stopWatch() {
+    window.clearInterval(watch);
+  }
+
+  // Recién ahora, con los mecanismos de revelado andando, se activa el estado oculto
+  root.classList.add("motion");
 
   // Sección activa en el menú
   const navLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>(".nav-links a[href^='#']"));
-  const spy = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        const id = `#${e.target.id}`;
-        navLinks.forEach((a) => a.classList.toggle("is-active", a.getAttribute("href") === id));
-      }
-    },
-    { rootMargin: "-45% 0px -50% 0px" },
-  );
-  document.querySelectorAll("main > section[id], footer[id]").forEach((s) => spy.observe(s));
+  let spy: IntersectionObserver | null = null;
+  try {
+    spy = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          const id = `#${e.target.id}`;
+          navLinks.forEach((a) => a.classList.toggle("is-active", a.getAttribute("href") === id));
+        }
+      },
+      { rootMargin: "-45% 0px -50% 0px" },
+    );
+    document.querySelectorAll("main > section[id], footer[id]").forEach((s) => spy!.observe(s));
+  } catch {}
 
   // Desplazamiento suave hacia las anclas
   let autoScroll: { raf: number } | null = null;
@@ -181,6 +219,7 @@ function setup() {
   };
 
   const onScroll = () => {
+    if (pending.size) sweep();
     if (!ticking) {
       ticking = true;
       requestAnimationFrame(update);
@@ -195,8 +234,9 @@ function setup() {
   window.addEventListener("resize", onResize);
 
   return () => {
-    io.disconnect();
-    spy.disconnect();
+    io?.disconnect();
+    spy?.disconnect();
+    stopWatch();
     stopAutoScroll();
     document.removeEventListener("click", onClick);
     cancelEvents.forEach((ev) => window.removeEventListener(ev, stopAutoScroll));
