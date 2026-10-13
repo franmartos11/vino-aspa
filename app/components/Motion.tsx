@@ -13,10 +13,15 @@ import { useEffect } from "react";
  */
 export default function Motion() {
   useEffect(() => {
+    const dbg = debugState();
+    dbg.effectRan = true;
     try {
-      return setup();
+      const cleanup = setup();
+      dbg.setupOk = true;
+      return cleanup;
     } catch (err) {
       document.documentElement.classList.remove("motion");
+      dbg.setupError = String(err);
       console.error(err);
     }
   }, []);
@@ -45,6 +50,7 @@ function setup() {
   // lo cubren; si falla todo el setup, .motion nunca se agrega y la página se ve completa.
   const viewportH = () => window.innerHeight || root.clientHeight || 800;
   const pending = new Set(document.querySelectorAll<HTMLElement>(".up, .rv, [data-reveal], [data-count]"));
+  debugState().pending = () => pending.size;
 
   const reveal = (el: HTMLElement) => {
     if (!pending.delete(el)) return;
@@ -243,6 +249,13 @@ function setup() {
     window.removeEventListener("scroll", onScroll);
     window.removeEventListener("resize", onResize);
   };
+}
+
+/** Estado interno que muestra el panel de diagnóstico (?debug=1). */
+export type DebugState = { effectRan?: boolean; setupOk?: boolean; setupError?: string; pending?: () => number };
+function debugState(): DebugState {
+  const w = window as Window & { __aspaDebug?: DebugState };
+  return (w.__aspaDebug ??= {});
 }
 
 function easeInOutCubic(t: number) {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Italiana, Lato, Marcellus, Playfair_Display } from "next/font/google";
+import DebugPanel from "../components/DebugPanel";
 import Motion from "../components/Motion";
 import { getDictionary, hasLocale, locales } from "./dictionaries";
 import "../globals.css";
@@ -48,6 +49,7 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
       <body>
         <Motion />
         {children}
+        <DebugPanel />
       </body>
     </html>
   );
