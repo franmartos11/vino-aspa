@@ -62,7 +62,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <div className="hero-frame cut" data-parallax="-0.12">
             <div className="inner cut">
               <div className="photo cut">
-                <img className="fill h-img" src="/img/hero-vinedo.jpg" alt={t.hero.photoAlt} style={{ objectPosition: "56% 50%" }} />
+                <img fetchPriority="high" className="fill h-img" src="/img/hero-vinedo.jpg" alt={t.hero.photoAlt} style={{ objectPosition: "56% 50%" }} />
               </div>
             </div>
           </div>
@@ -78,7 +78,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <div aria-hidden="true" className="hero-shadow" />
           <div className="hero-bottle" data-parallax="-0.06">
             <div className="h-bottle" style={{ position: "relative", width: "100%", height: "100%" }}>
-              <img src="/img/bottle.png" alt={t.hero.bottleAlt} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
+              <img fetchPriority="high" src="/img/bottle.png" alt={t.hero.bottleAlt} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
             </div>
             <div aria-hidden="true" className="reflection">
               <img src="/img/bottle.png" alt="" />
@@ -142,10 +142,10 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <div className="wrap origen-grid">
             <div className="origen-photos">
               <div className="a cut zoom rv">
-                <div className="zi"><img className="fill" src="/img/barrica.jpg" alt={t.origen.barrelAlt} style={{ objectPosition: "50% 42%" }} /></div>
+                <div className="zi"><img loading="lazy" decoding="async" className="fill" src="/img/barrica.jpg" alt={t.origen.barrelAlt} style={{ objectPosition: "50% 42%" }} /></div>
               </div>
               <div className="b cut zoom rv" data-parallax="-0.1" style={{ "--d": "0.25s" } as React.CSSProperties}>
-                <div className="zi"><img className="fill" src="/img/racimos.jpg" alt={t.origen.grapesAlt} style={{ objectPosition: "40% 50%" }} /></div>
+                <div className="zi"><img loading="lazy" decoding="async" className="fill" src="/img/racimos.jpg" alt={t.origen.grapesAlt} style={{ objectPosition: "40% 50%" }} /></div>
               </div>
             </div>
             <div className="up" style={{ flex: "1 1 420px", minWidth: 0 }}>
@@ -167,7 +167,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <section id="vinedo" style={{ position: "relative" }}>
           <div className="expand vinedo" data-reveal>
             <div className="bg rv">
-              <div><img className="fill" src="/img/valle.jpg" alt={t.vinedo.alt} style={{ objectPosition: "50% 100%" }} /></div>
+              <div><img loading="lazy" decoding="async" className="fill" src="/img/valle.jpg" alt={t.vinedo.alt} style={{ objectPosition: "50% 100%" }} /></div>
             </div>
             <div aria-hidden="true" className="frame" />
             <div className="up card-text">
@@ -189,7 +189,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             <div className="acc" data-reveal>
               {t.instantes.items.map((i, n) => (
                 <div className="it" key={n} style={{ "--i": n } as React.CSSProperties}>
-                  <img className="fill" src={`/img/${INSTANTES_IMG[n].img}.jpg`} alt={i.alt} style={{ objectPosition: INSTANTES_IMG[n].pos }} />
+                  <img loading="lazy" decoding="async" className="fill" src={`/img/${INSTANTES_IMG[n].img}.jpg`} alt={i.alt} style={{ objectPosition: INSTANTES_IMG[n].pos }} />
                   <span className="num">{i.tag}</span>
                   <div className="cap"><b>{i.title}</b><span>{i.text}</span></div>
                 </div>
@@ -205,7 +205,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
               <div aria-hidden="true" className="plate cut" />
               <div aria-hidden="true" className="ghost"><span data-parallax="0.12" style={{ display: "inline-block" }}>ASPA</span></div>
               <div aria-hidden="true" className="shadow" />
-              <div className="bottle"><img src="/img/bottle.png" alt={t.vino.bottleAlt} style={{ width: "100%", height: "100%" }} /></div>
+              <div className="bottle"><img loading="lazy" decoding="async" src="/img/bottle.png" alt={t.vino.bottleAlt} style={{ width: "100%", height: "100%" }} /></div>
               <div className="score">
                 <span className="serif" data-count="95" style={{ fontSize: 54, lineHeight: 1 }}>95</span>
                 <span className="marcellus" style={{ fontSize: 11, letterSpacing: ".24em", marginTop: 4 }}>{t.vino.points}</span>
@@ -250,7 +250,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
               {t.experiencias.items.map((e, n) => (
                 <a key={n} className="card up" href="#reservar" style={{ "--d": `${n * 0.15}s` } as React.CSSProperties}>
                   <div className="cut zoom rv" style={{ height: 460, position: "relative", "--d": `${n * 0.15 + 0.1}s` } as React.CSSProperties}>
-                    <div className="zi"><img className="fill" src={`/img/${EXPERIENCIAS_IMG[n]}.jpg`} alt={e.alt} /></div>
+                    <div className="zi"><img loading="lazy" decoding="async" className="fill" src={`/img/${EXPERIENCIAS_IMG[n]}.jpg`} alt={e.alt} /></div>
                   </div>
                   <div className="meta"><span>{e.a}</span><span>{e.b}</span></div>
                   <h3>{e.title}</h3>
@@ -300,7 +300,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <div className="footer-grid" data-reveal>
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <img src="/img/logo-light.png" alt="ASPA" style={{ height: 64, width: "auto" }} />
+                <img loading="lazy" decoding="async" src="/img/logo-light.png" alt="ASPA" style={{ height: 64, width: "auto" }} />
                 <span className="marcellus" style={{ fontSize: 13, letterSpacing: ".32em", color: "var(--paper)" }}>ASPA</span>
               </span>
               <span className="muted">

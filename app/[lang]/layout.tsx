@@ -19,6 +19,13 @@ const lato = Lato({
   style: ["normal", "italic"],
 });
 
+const MOTION_BOOT = `(function(){
+  var d = document.documentElement;
+  if (!("IntersectionObserver" in window)) return;
+  d.classList.add("motion");
+  setTimeout(function(){ if (!window.__aspaMotion) d.classList.remove("motion"); }, 2000);
+})();`;
+
 export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
 }
@@ -47,8 +54,9 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
       className={`${playfair.variable} ${italiana.variable} ${marcellus.variable} ${lato.variable}`}
     >
       <head>
-        {/* Activa las animaciones de aparición antes del primer pintado (sin JS el contenido se ve igual) */}
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('motion')" }} />
+        {/* Oculta lo que se anima al aparecer antes del primer pintado. Si el JS de la página no
+            arranca en 2 s (navegador viejo, red lenta, error), se quita la clase y todo se ve sin animar. */}
+        <script dangerouslySetInnerHTML={{ __html: MOTION_BOOT }} />
       </head>
       <body>
         <Motion />
